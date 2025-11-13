@@ -49,7 +49,6 @@ pipeline {
                 echo '🚀 Deploying to local EC2 web server...'
                 sh '''
                 cp -r ${BUILD_DIR}/web/* ${DEPLOY_DIR}/
-                systemctl restart apache2 
                 '''
             }
         }
