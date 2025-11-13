@@ -48,7 +48,7 @@ pipeline {
             steps {
                 echo '🚀 Deploying to local EC2 web server...'
                 sh '''
-                cp -r ${BUILD_DIR}/web/* ${DEPLOY_DIR}/
+                cp -r ${BUILD_DIR}/web/* ${DEPLOY_DIR}/index.html
                 '''
             }
         }
