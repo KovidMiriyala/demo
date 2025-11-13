@@ -1,11 +1,16 @@
 pipeline {
     agent any
 
+    environment {
+        BUILD_DIR = 'build'
+        DEPLOY_DIR = '/var/www/html'
+    }
+
     stages {
         stage('Checkout') {
             steps {
                 echo '🔄 Checking out source code...'
-                git branch: 'main', url: 'https://github.com/KovidMiriyala/demo.git'
+                checkout scm
             }
         }
 
@@ -13,18 +18,49 @@ pipeline {
             steps {
                 echo '🏗️ Compiling Java code...'
                 sh '''
-                    mkdir -p build
-                    javac -d build src/*.java
+                mkdir -p ${BUILD_DIR}
+                javac -d ${BUILD_DIR} src/HelloWorld.java
                 '''
             }
         }
 
         stage('Test') {
             steps {
-                echo '🧪 Running Java application...'
+                echo '🧪 Running tests...'
                 sh '''
-                    cd build
-                    java HelloWorld
+                javac -cp ${BUILD_DIR} -d ${BUILD_DIR} test/HelloWorldTest.java
+                java -cp ${BUILD_DIR} HelloWorldTest
+                '''
+            }
+        }
+
+        stage('Package') {
+            steps {
+                echo '📦 Preparing deployment package...'
+                sh '''
+                mkdir -p ${BUILD_DIR}/web
+                cp web/helloworld.html ${BUILD_DIR}/web/
+                '''
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo '🚀 Deploying to local EC2 web server...'
+                sh '''
+                sudo cp -r ${BUILD_DIR}/web/* ${DEPLOY_DIR}/
+                sudo systemctl restart apache2 || sudo systemctl restart httpd
+                '''
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
+                echo '🌐 Verifying deployment...'
+                sh '''
+                PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+                echo "✅ Application deployed successfully!"
+                echo "🌍 Visit: http://$PUBLIC_IP/"
                 '''
             }
         }
@@ -32,10 +68,10 @@ pipeline {
 
     post {
         success {
-            echo '🎉 Build and test successful! Your Hello World app works.'
+            echo '🎉 Pipeline completed successfully!'
         }
         failure {
-            echo '❌ Build or test failed. Please check the logs.'
+            echo '❌ Build or deployment failed. Check logs.'
         }
     }
 }
