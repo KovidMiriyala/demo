@@ -48,8 +48,8 @@ pipeline {
             steps {
                 echo '🚀 Deploying to local EC2 web server...'
                 sh '''
-                sudo cp -r ${BUILD_DIR}/web/* ${DEPLOY_DIR}/
-                sudo systemctl restart apache2 || sudo systemctl restart httpd
+                cp -r ${BUILD_DIR}/web/* ${DEPLOY_DIR}/
+                systemctl restart apache2 
                 '''
             }
         }
